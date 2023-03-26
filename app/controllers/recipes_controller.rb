@@ -1,27 +1,19 @@
-rescue_from ActiveRecord::RecordInvalid, with: :render_record_invalid_response
+class RecipesController < ApplicationController
+  before_action :authorize
 
   def index
-    user = User.find_by(id: session[:user_id])
-    if user
-      recipes = Recipe.all
-      render json: recipes, status: :created
-    else
-      render json: { errors: ["Not authorized"]}, status: :unauthorized
-    end
+      #recipe = Recipe.all 
+      render json: Recipe.all, status: :ok
   end
 
   def create
-    user = User.find_by(id: session[:user_id])
-    if user
-      recipe = Recipe.create!(user_id: user.id, title: params[:title], instructions: params[:instructions], minutes_to_complete: params[:minutes_to_complete])
-      render json: recipe, include: :user, status: :created
-    else
-      render json: { errors: ["Not authorized"] }, status: :unauthorized
-    end
+      user = User.find_by(id: session[:user_id])
+      recipe = user.recipes.create!(recipe_params)
+      render json: recipe, status: :created
   end
 
-  private
-
-  def render_record_invalid_response(e)
-    render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
+  private 
+  def recipe_params
+      params.permit(:title, :instructions, :minutes_to_complete)
   end
+end
